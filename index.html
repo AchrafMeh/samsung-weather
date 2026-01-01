@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Samsung Weather</title>
+
+<style>
+:root{
+  --card-bg: rgba(255,255,255,.15);
+  --blur: blur(16px);
+}
+
+*{box-sizing:border-box;font-family:system-ui;margin:0;padding:0}
+
+body{
+  background: linear-gradient(180deg,#6f74b8,#3a9bdc);
+  color:#fff;
+  min-height:100vh;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+}
+
+.app{
+  width:360px;
+  padding:20px;
+}
+
+.search{
+  display:flex;
+  margin-bottom:15px;
+}
+.search input{
+  flex:1;
+  padding:12px;
+  border:none;
+  border-radius:14px 0 0 14px;
+  outline:none;
+}
+.search button{
+  border:none;
+  padding:12px;
+  border-radius:0 14px 14px 0;
+  cursor:pointer;
+}
+
+.current{
+  text-align:left;
+  margin-bottom:20px;
+}
+.temp{
+  font-size:64px;
+  font-weight:300;
+}
+.desc{opacity:.9}
+
+.icon{
+  width:100px;
+  margin:10px 0;
+}
+
+.card{
+  background:var(--card-bg);
+  backdrop-filter:var(--blur);
+  border-radius:18px;
+  padding:15px;
+  margin-bottom:15px;
+}
+
+.hourly{
+  display:flex;
+  gap:15px;
+  overflow-x:auto;
+}
+.hour{
+  text-align:center;
+  min-width:60px;
+}
+.hour img{width:40px}
+
+.days .day{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:8px 0;
+}
+.days img{width:35px}
+</style>
+</head>
+
+<body>
+<div class="app">
+
+  <div class="search">
+    <input id="city" placeholder="إسم المنطقة باللاتينية">
+    <button onclick="loadWeather()">🔍</button>
+  </div>
+
+  <div class="current">
+    <div id="cityName">—</div>
+    <div class="temp"><span id="temp">--</span>°</div>
+    <img id="icon" class="icon">
+    <div id="desc" class="desc">—</div>
+  </div>
+
+  <div class="card">
+    <strong>Hourly forecast</strong>
+    <div id="hourly" class="hourly"></div>
+  </div>
+
+  <div class="card days">
+    <strong>Next days</strong>
+    <div id="days"></div>
+  </div>
+
+</div>
+
+<script>
+const API_KEY="377f71a5383e4ae10cecd69e07b92091";
+
+function loadWeather(){
+ const city=document.getElementById("city").value;
+ if(!city)return;
+
+ fetch(`https://api.openweathermap.org/data/2.5/weather?q=${city}&units=metric&appid=377f71a5383e4ae10cecd69e07b92091`)
+ .then(r=>r.json())
+ .then(d=>{
+   document.getElementById("cityName").innerText=d.name;
+   document.getElementById("temp").innerText=Math.round(d.main.temp);
+   document.getElementById("desc").innerText=d.weather[0].main;
+   document.getElementById("icon").src=
+     `https://openweathermap.org/img/wn/${d.weather[0].icon}@4x.png`;
+ });
+
+ fetch(`https://api.openweathermap.org/data/2.5/forecast?q=${city}&units=metric&appid=${API_KEY}`)
+ .then(r=>r.json())
+ .then(d=>{
+   hourly.innerHTML="";
+   days.innerHTML="";
+
+   for(let i=0;i<8;i++){
+     const h=d.list[i];
+     hourly.innerHTML+=`
+     <div class="hour">
+       <div>${h.dt_txt.slice(11,16)}</div>
+       <img src="https://openweathermap.org/img/wn/${h.weather[0].icon}.png">
+       <div>${Math.round(h.main.temp)}°</div>
+     </div>`;
+   }
+
+   for(let i=8;i<40;i+=8){
+     const day=d.list[i];
+     days.innerHTML+=`
+     <div class="day">
+       <div>${new Date(day.dt_txt).toLocaleDateString('en',{weekday:'short'})}</div>
+       <img src="https://openweathermap.org/img/wn/${day.weather[0].icon}.png">
+       <div>${Math.round(day.main.temp)}°</div>
+     </div>`;
+   }
+ });
+}
+</script>
+</body>
+</html>
